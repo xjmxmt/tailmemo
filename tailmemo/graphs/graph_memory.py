@@ -20,7 +20,8 @@ from tailmemo.graphs.tools import (
     RELATIONS_STRUCT_TOOL,
     RELATIONS_TOOL,
 )
-from tailmemo.configs.prompts import NODE_EXTRACTION_PROMPTS, EXTRACT_RELATIONS_PROMPT, get_delete_messages
+from tailmemo.configs.prompts import (NODE_EXTRACTION_PROMPTS, NODE_EXTRACTION_PROMPTS_FOR_SEARCH,
+                                      EXTRACT_RELATIONS_PROMPT, get_delete_messages)
 from tailmemo.utils.factory import EmbedderFactory, LlmFactory
 
 
@@ -107,7 +108,7 @@ class MemoryGraph:
                 - "contexts": List of search results from the base data store.
                 - "entities": List of related graph data based on the query.
         """
-        entity_info_map = self._retrieve_nodes_from_data(query, filters)
+        entity_info_map = self._retrieve_nodes_from_data(query, filters, search=True)
         search_output = self._search_graph_db(node_list=list(entity_info_map.keys()), filters=filters, entity_info_map=entity_info_map)
 
         if not search_output:
@@ -193,7 +194,7 @@ class MemoryGraph:
 
         return final_results
 
-    def _retrieve_nodes_from_data(self, data, filters):
+    def _retrieve_nodes_from_data(self, data, filters, search=False):
         """Extracts all the entities mentioned in the query.
         
         Returns:
@@ -213,7 +214,7 @@ class MemoryGraph:
             messages=[
                 {
                     "role": "system",
-                    "content": NODE_EXTRACTION_PROMPTS,
+                    "content": NODE_EXTRACTION_PROMPTS_FOR_SEARCH if search else NODE_EXTRACTION_PROMPTS,
                 },
                 {"role": "user", "content": data},
             ],
